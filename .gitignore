@@ -12,3 +12,8 @@ dist/
 # Notas para asistentes de IA (solo locales)
 AGENTS.md
 CLAUDE.md
+
+# Vite
+dist-ssr
+*.local
+node_modules/.tmp
