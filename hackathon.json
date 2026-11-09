@@ -1,11 +1,20 @@
 {
-  "teamCode": "TEAM-000",
-  "teamName": "Nombre de la cuadrilla",
-  "deployUrl": "https://",
-  "storageProvider": "SUPABASE | CLOUDINARY",
+  "teamCode": "TEAM-044",
+  "teamName": "VAN",
+  "deployUrl": "https://hackathon3-jade.vercel.app",
+  "storageProvider": "SUPABASE",
   "integrantes": [
-    { "nombre": "Nombre Apellido", "codigo": "CODIGO UTEC" },
-    { "nombre": "Nombre Apellido", "codigo": "CODIGO UTEC" },
-    { "nombre": "Nombre Apellido", "codigo": "CODIGO UTEC" }
+    {
+      "nombre": "Valentina Yamile Puicon Arapa",
+      "codigo": "202510090"
+    },
+    {
+      "nombre": "Nayra Kamila Paredes Rodriguez",
+      "codigo": "202510441"
+    },
+    {
+      "nombre": "Jocelyn Avril Uceda Tang",
+      "codigo": "202510545"
+    }
   ]
 }
