@@ -8,3 +8,7 @@ dist/
 .wrangler/
 *.log
 .DS_Store
+
+# Notas para asistentes de IA (solo locales)
+AGENTS.md
+CLAUDE.md
