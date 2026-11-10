@@ -1,3 +1,56 @@
+# Cuadrilla VAN · TEAM-044
+
+**Producción:** https://hackathon3-jade.vercel.app
+
+## Integrantes
+
+| Nombre | Código |
+|:--|:--|
+| Valentina Yamile Puicon Arapa | 202510090 |
+| Nayra Kamila Paredes Rodriguez | 202510441 |
+| Jocelyn Avril Uceda Tang | 202510545 |
+
+## Cómo ejecutar el proyecto
+
+Requiere Node 24 LTS y npm.
+
+```bash
+npm install
+cp .env.example .env
+npm run dev
+```
+
+Completa `.env` con los valores de tu entorno. Para generar la versión de producción:
+
+```bash
+npm run build
+```
+
+| Variable | Uso |
+|:--|:--|
+| `VITE_API_BASE_URL` | URL base de la API |
+| `VITE_WS_BASE_URL` | URL base del WebSocket |
+| `VITE_SUPABASE_URL` | URL del proyecto de Supabase |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Clave publicable de Supabase |
+| `VITE_SUPABASE_BUCKET` | Bucket de imágenes (`lumon-media`) |
+
+## Despliegue
+
+- Hosting en Vercel, conectado a la rama `main` de este repositorio.
+- Las variables `VITE_*` se configuran en **Settings → Environment Variables**.
+- `vercel.json` redirige las rutas de la aplicación a `index.html`, sirve `/.well-known/lumon-verification.txt` como texto y define `Content-Security-Policy`, `X-Content-Type-Options` y `Referrer-Policy`.
+- `X-Lumon-Build` lleva los primeros 7 caracteres del SHA del commit, que Vercel entrega en el build mediante `VERCEL_GIT_COMMIT_SHA`. En local vale `dev`.
+- El dominio se verificó con `POST /integrations/deploy/challenge` y `POST /integrations/deploy/verify`.
+
+## Storage de imágenes
+
+- Supabase Storage, con el bucket público de lectura `lumon-media`.
+- El bucket acepta solo `image/webp` y archivos de hasta 300 KB.
+- Una política RLS permite al rol `anon` únicamente insertar dentro de la carpeta `TEAM-044/`. No hay políticas de `UPDATE` ni `DELETE`.
+- El frontend usa solo la clave publicable. La configuración se registró y verificó con `PUT /integrations/storage`.
+
+---
+
 # Hackathon Frontend: Lumon Industries — Macrodata Refinement
 
 <div align="center">
