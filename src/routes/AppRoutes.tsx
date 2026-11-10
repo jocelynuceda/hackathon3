@@ -12,11 +12,11 @@ import { RequirePermission } from './RequirePermission'
 const FilesPage = lazy(() => import('../pages/FilesPage').then((m) => ({ default: m.FilesPage })))
 const EstadoPage = lazy(() => import('../pages/EstadoPage').then((m) => ({ default: m.EstadoPage })))
 const RefinePage = lazy(() => import('../pages/RefinePage'))
-
-/** Marca de posición: cada página real reemplaza su `element` en este archivo. */
-function Pending({ name }: { name: string }) {
-  return <StatusScreen title={name} description="Pendiente de construir." />
-}
+const RefinersPage = lazy(() => import('../refiners/RefinersPage').then((m) => ({ default: m.RefinersPage })))
+const EditRefinerPage = lazy(() => import('../refiners/EditRefinerPage').then((m) => ({ default: m.EditRefinerPage })))
+const BadgePage = lazy(() => import('../refiners/BadgePage').then((m) => ({ default: m.BadgePage })))
+const IncidentsPage = lazy(() => import('../incidents/IncidentsPage').then((m) => ({ default: m.IncidentsPage })))
+const NewIncidentPage = lazy(() => import('../incidents/NewIncidentPage').then((m) => ({ default: m.NewIncidentPage })))
 
 export function AppRoutes() {
   return (
@@ -36,20 +36,20 @@ export function AppRoutes() {
             </Route>
 
             <Route element={<RequirePermission permissions={['refiners:read']} />}>
-              <Route path="refiners" element={<Pending name="Expedientes" />} />
+              <Route path="refiners" element={<RefinersPage />} />
             </Route>
             <Route element={<RequirePermission permissions={['refiners:write']} />}>
-              <Route path="refiners/:id/edit" element={<Pending name="Editar expediente" />} />
+              <Route path="refiners/:id/edit" element={<EditRefinerPage />} />
             </Route>
             <Route element={<RequirePermission permissions={['refiners:write', 'media:upload']} />}>
-              <Route path="refiners/:id/badge" element={<Pending name="Fotocheck" />} />
+              <Route path="refiners/:id/badge" element={<BadgePage />} />
             </Route>
 
             <Route element={<RequirePermission permissions={['incidents:read']} />}>
-              <Route path="incidents" element={<Pending name="Incidencias" />} />
+              <Route path="incidents" element={<IncidentsPage />} />
             </Route>
             <Route element={<RequirePermission permissions={['incidents:create', 'media:upload']} />}>
-              <Route path="incidents/new" element={<Pending name="Nueva incidencia" />} />
+              <Route path="incidents/new" element={<NewIncidentPage />} />
             </Route>
           </Route>
         </Route>

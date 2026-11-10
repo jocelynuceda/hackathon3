@@ -10,8 +10,7 @@ import { errorMessage } from '../api/errors'
 import type { Bin } from '../api/types'
 import { useLumonEvent } from '../events/hooks'
 import { useFile } from '../grid/useFile'
-
-const BINS: Bin[] = ['WO', 'FC', 'DR', 'MA']
+import { RefineWorkspace } from '../refine/RefineWorkspace'
 
 export default function RefinePage() {
   const { id } = useParams()
@@ -34,6 +33,7 @@ export default function RefinePage() {
     setFile({ ...file, progress: ev.progress })
   })
   useLumonEvent('stream.reset', () => reload())
+  useLumonEvent('file.completed', () => reload())
 
   if (!Number.isInteger(fileId) || fileId < 1) {
     return (
@@ -44,7 +44,7 @@ export default function RefinePage() {
     )
   }
   if (loading && !file) return <main className="p-6" role="status">Cargando archivo…</main>
-  if (error !== null || !file || !rules) {
+  if (error !== null || !file || !rules || !loader) {
     return (
       <main className="p-6" role="alert">
         <p>No se pudo cargar el archivo: {errorMessage(error)}</p>
@@ -60,14 +60,7 @@ export default function RefinePage() {
         {file.rows} × {file.cols} celdas · {tileRows} × {tileCols} bloques de {file.tileSize} · umbral {rules.tremorThreshold} ·
         conectividad {rules.connectivity} · grupos de {rules.minGroupSize} a {rules.maxGroupSize}
       </p>
-      <div className="mt-4 grid max-w-xl grid-cols-4 gap-3">
-        {BINS.map((b) => (
-          <div key={b}>
-            <div className="text-sm font-semibold">{b}</div>
-            <progress className="w-full" max={1} value={file.progress[b]} aria-label={`Progreso de la caja ${b}`} />
-          </div>
-        ))}
-      </div>
+      <RefineWorkspace key={file.id} file={file} rules={rules} loader={loader} setFile={setFile} />
       <p className="mt-4 text-sm text-slate-400" role="status">Bloques recibidos: {loadedTiles}</p>
     </main>
   )

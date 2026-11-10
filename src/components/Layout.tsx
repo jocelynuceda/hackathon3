@@ -32,6 +32,16 @@ export function Layout() {
               Archivos
             </NavLink>
           )}
+          {can(PERMISSIONS.refinersRead) && (
+            <NavLink to="/refiners" className={linkClass}>
+              Expedientes
+            </NavLink>
+          )}
+          {can(PERMISSIONS.incidentsRead) && (
+            <NavLink to="/incidents" className={linkClass}>
+              Incidencias
+            </NavLink>
+          )}
           <NavLink to="/estado" className={linkClass}>
             Estado
           </NavLink>

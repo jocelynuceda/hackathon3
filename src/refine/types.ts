@@ -17,24 +17,6 @@ export interface Cell {
   c: number
 }
 
-/** Respuesta de GET /files/{id}/tiles/{tileRow}/{tileCol}. */
-export interface Tile {
-  tileRow: number
-  tileCol: number
-  originRow: number
-  originCol: number
-  rows: number
-  cols: number
-  values: string
-  tremor: string
-  bins: string
-  version: number
-}
-
-export interface DecodedTile extends Omit<Tile, 'tremor'> {
-  tremor: Uint8Array
-}
-
 export interface Progress {
   WO: number
   FC: number

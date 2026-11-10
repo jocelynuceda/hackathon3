@@ -7,15 +7,20 @@ export interface RefineRequest {
   idempotencyKey: string
 }
 
-/** Hace el POST /files/{id}/refinements con el cliente de la API y entrega la respuesta. */
-export type SendRefinement = (request: RefineRequest) => Promise<Response>
-
 export interface RefineRejection {
   httpStatus: number
-  error: string
+  code: string
   message: string
   details: unknown
 }
+
+/** Resultado de un intento: creado, rechazado de forma definitiva o conviene reintentar. */
+export type SendResult =
+  | { kind: 'created'; result: RefineResult; replayed: boolean }
+  | { kind: 'rejected'; rejection: RefineRejection }
+  | { kind: 'retry'; retryAfterSeconds: number | null }
+
+export type SendRefinement = (request: RefineRequest) => Promise<SendResult>
 
 export type RefineOutcome =
   | { status: 'refined'; result: RefineResult; replayed: boolean }
@@ -27,21 +32,9 @@ const BASE_DELAY_MS = 500
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-function retryDelayMs(attempt: number, retryAfter: string | null): number {
-  const backoff = BASE_DELAY_MS * 2 ** attempt
-  const seconds = Number(retryAfter)
-  return retryAfter !== null && Number.isFinite(seconds) ? Math.max(backoff, seconds * 1_000) : backoff
-}
-
 function intentOf(fileId: number, bin: Bin, cells: readonly Cell[]): string {
   const sorted = cells.map(({ r, c }) => `${r}:${c}`).sort()
   return `${fileId}|${bin}|${sorted.join(',')}`
-}
-
-async function toRejection(response: Response): Promise<RefineRejection> {
-  const fallback = { error: 'UNKNOWN', message: 'El servidor rechazó la solicitud.', details: null }
-  const body = (await response.json().catch(() => fallback)) as typeof fallback
-  return { httpStatus: response.status, error: body.error, message: body.message, details: body.details }
 }
 
 /**
@@ -53,30 +46,16 @@ export function createRefiner(send: SendRefinement) {
   const inFlight = new Map<string, Promise<RefineOutcome>>()
 
   async function attempt(request: RefineRequest): Promise<RefineOutcome> {
-    for (let attemptIndex = 0; attemptIndex < MAX_ATTEMPTS; attemptIndex += 1) {
-      let response: Response
-      try {
-        response = await send(request)
-      } catch {
-        await wait(retryDelayMs(attemptIndex, null))
-        continue
+    for (let index = 0; index < MAX_ATTEMPTS; index += 1) {
+      const sent = await send(request)
+      if (sent.kind === 'created') {
+        return { status: 'refined', result: sent.result, replayed: sent.replayed }
       }
-
-      if (response.status === 429 || response.status >= 500) {
-        await wait(retryDelayMs(attemptIndex, response.headers.get('Retry-After')))
-        continue
+      if (sent.kind === 'rejected') {
+        return { status: 'rejected', rejection: sent.rejection }
       }
-
-      if (response.status === 201) {
-        const result = (await response.json()) as RefineResult
-        return {
-          status: 'refined',
-          result,
-          replayed: response.headers.get('Idempotent-Replayed') === 'true',
-        }
-      }
-
-      return { status: 'rejected', rejection: await toRejection(response) }
+      const backoff = BASE_DELAY_MS * 2 ** index
+      await wait(Math.max(backoff, (sent.retryAfterSeconds ?? 0) * 1_000))
     }
     return { status: 'unavailable' }
   }

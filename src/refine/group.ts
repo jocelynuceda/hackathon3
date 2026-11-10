@@ -1,4 +1,4 @@
-import type { Bin, Cell, DecodedTile, Rules, Tile } from './types'
+import type { Bin, Cell, Rules } from './types'
 
 export interface GridSize {
   rows: number
@@ -15,8 +15,18 @@ export interface Group {
   alreadyRefined: boolean
 }
 
+/** Lo que la búsqueda necesita de un bloque ya decodificado. */
+export interface GroupTile {
+  originRow: number
+  originCol: number
+  cols: number
+  values: ArrayLike<number>
+  tremor: ArrayLike<number>
+  bins: ArrayLike<string>
+}
+
 /** Debe compartir la caché de bloques de la grilla para no repetir requests. */
-export type TileLoader = (tileRow: number, tileCol: number) => Promise<DecodedTile>
+export type LoadTile = (tileRow: number, tileCol: number) => Promise<GroupTile>
 
 const ORTHOGONAL = [
   [-1, 0],
@@ -31,12 +41,6 @@ const DIAGONAL = [
   [1, -1],
   [1, 1],
 ] as const
-
-export function decodeTile(tile: Tile): DecodedTile {
-  const binary = atob(tile.tremor)
-  const tremor = Uint8Array.from(binary, (character) => character.charCodeAt(0))
-  return { ...tile, tremor }
-}
 
 export function binIndex(digits: readonly number[], rules: Rules): number {
   const value =
@@ -61,14 +65,14 @@ export async function findGroup(
   start: Cell,
   grid: GridSize,
   rules: Rules,
-  loadTile: TileLoader,
+  loadTile: LoadTile,
 ): Promise<Group | null> {
   const inGrid = ({ r, c }: Cell) => r >= 0 && c >= 0 && r < grid.rows && c < grid.cols
   if (!inGrid(start)) return null
 
   const offsets = rules.connectivity === 8 ? [...ORTHOGONAL, ...DIAGONAL] : ORTHOGONAL
   const keyOf = ({ r, c }: Cell) => r * grid.cols + c
-  const tiles = new Map<string, DecodedTile>()
+  const tiles = new Map<string, GroupTile>()
 
   async function read({ r, c }: Cell) {
     const tileRow = Math.floor(r / grid.tileSize)
@@ -82,7 +86,7 @@ export async function findGroup(
     const index = (r - tile.originRow) * tile.cols + (c - tile.originCol)
     return {
       scary: tile.tremor[index] >= rules.tremorThreshold,
-      digit: Number(tile.values[index]),
+      digit: tile.values[index],
       refined: tile.bins[index] !== '.',
     }
   }
