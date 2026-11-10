@@ -1,0 +1,16 @@
+.refine-tremor {
+  display: inline-block;
+  animation: refine-tremor 220ms ease-in-out infinite alternate;
+}
+
+@keyframes refine-tremor {
+  from { transform: translateX(calc(-1 * var(--refine-tremor))); }
+  to { transform: translateX(var(--refine-tremor)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .refine-tremor {
+    animation: none;
+    text-decoration: underline dotted;
+  }
+}
