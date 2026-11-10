@@ -17,3 +17,4 @@ CLAUDE.md
 dist-ssr
 *.local
 node_modules/.tmp
+.claude/
