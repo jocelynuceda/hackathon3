@@ -1,8 +1,7 @@
-import { useState } from 'react'
-import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import type { DataFile } from '../api/types'
 import { useCan } from '../auth/session'
+import { cellKey, RefineGrid } from '../grid/RefineGrid'
 import type { TileLoader } from '../grid/tileLoader'
 import { BinTray } from './BinTray'
 import type { Rules } from './types'
@@ -40,16 +39,6 @@ export function RefineWorkspace({ file, rules, loader, setFile }: RefineWorkspac
   })
   const { dragging, hoverBin, ghostRef, beginDrag } = useGroupDrag((bin) => void refineTo(bin))
 
-  // PROVISIONAL: reemplazar este formulario por la grilla, que llama a selectCell({ r, c }) al elegir
-  // una celda, marca selection.group.cells y llama a beginDrag(evento) en el onPointerDown del grupo.
-  const [row, setRow] = useState('')
-  const [col, setCol] = useState('')
-
-  function submitCell(event: FormEvent) {
-    event.preventDefault()
-    void selectCell({ r: Number(row), c: Number(col) })
-  }
-
   if (file.status === 'COMPLETE' || file.progress.overall >= 1) return <FileCompleted file={file} />
 
   const group = selection.status === 'ready' ? selection.group : null
@@ -60,35 +49,14 @@ export function RefineWorkspace({ file, rules, loader, setFile }: RefineWorkspac
 
   return (
     <div className="mt-4 space-y-4">
-      <form onSubmit={submitCell} className="flex flex-wrap items-end gap-3">
-        <label className="text-sm text-slate-200">
-          Fila
-          <input
-            type="number"
-            required
-            min={0}
-            max={file.rows - 1}
-            value={row}
-            onChange={(event) => setRow(event.target.value)}
-            className="mt-1 block w-24 rounded border border-slate-600 bg-slate-900 px-2 py-1"
-          />
-        </label>
-        <label className="text-sm text-slate-200">
-          Columna
-          <input
-            type="number"
-            required
-            min={0}
-            max={file.cols - 1}
-            value={col}
-            onChange={(event) => setCol(event.target.value)}
-            className="mt-1 block w-24 rounded border border-slate-600 bg-slate-900 px-2 py-1"
-          />
-        </label>
-        <button type="submit" className="rounded border border-slate-600 px-3 py-1">
-          Buscar grupo
-        </button>
-      </form>
+      <RefineGrid
+        file={file}
+        loader={loader}
+        threshold={rules.tremorThreshold}
+        selected={new Set(group?.cells.map(cellKey))}
+        onSelect={(cell) => void selectCell(cell)}
+        onDragStart={canDrop ? beginDrag : undefined}
+      />
 
       <section aria-label="Grupo seleccionado" className="min-h-24 rounded border border-slate-700 p-4">
         {selection.status === 'idle' && <p className="text-slate-300">Elige una celda que dé miedo.</p>}

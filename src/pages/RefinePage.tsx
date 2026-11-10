@@ -1,9 +1,3 @@
-/**
- * /files/:id/refine — PROVISIONAL.
- * Ya conecta el archivo, las reglas, el TileLoader y los eventos. La grilla virtualizada
- * (celdas, selección de grupos, arrastre a las cajas y refinamiento) va en <RefineGrid />,
- * que construye otra persona del equipo usando `loader` (ver src/grid/tileLoader.ts).
- */
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { errorMessage } from '../api/errors'
@@ -18,7 +12,7 @@ export default function RefinePage() {
   const { file, rules, loader, error, loading, tileRows, tileCols, setFile, reload } = useFile(fileId)
   const [loadedTiles, setLoadedTiles] = useState(0)
 
-  // Cuenta los bloques que van llegando (solo informativo mientras no esté la grilla).
+  // Cuenta los bloques recibidos al recorrer el archivo.
   useEffect(() => {
     if (!loader) return
     setLoadedTiles(0)
