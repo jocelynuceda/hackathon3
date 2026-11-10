@@ -15,7 +15,7 @@ function binAt(x: number, y: number): Bin | null {
  * Arrastre con Pointer Events, sin librería. Escucha en window para sobrevivir aunque la celda
  * de origen salga del DOM por la virtualización. Las cajas se marcan con `data-bin`.
  */
-export function useGroupDrag(onDrop: (bin: Bin) => void) {
+export function useGroupDrag(onDrop: (bin: Bin) => void, onCancel: () => void) {
   const [dragging, setDragging] = useState(false)
   const [hoverBin, setHoverBin] = useState<Bin | null>(null)
   const ghostElement = useRef<HTMLDivElement | null>(null)
@@ -23,8 +23,10 @@ export function useGroupDrag(onDrop: (bin: Bin) => void) {
   const stopRef = useRef<(() => void) | null>(null)
 
   const latestOnDrop = useRef(onDrop)
+  const latestOnCancel = useRef(onCancel)
   useEffect(() => {
     latestOnDrop.current = onDrop
+    latestOnCancel.current = onCancel
   })
 
   useEffect(() => () => stopRef.current?.(), [])
@@ -52,7 +54,7 @@ export function useGroupDrag(onDrop: (bin: Bin) => void) {
     const stop = () => {
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
-      window.removeEventListener('pointercancel', stop)
+      window.removeEventListener('pointercancel', cancel)
       window.removeEventListener('keydown', onKey)
       stopRef.current = null
       setDragging(false)
@@ -72,15 +74,21 @@ export function useGroupDrag(onDrop: (bin: Bin) => void) {
       const bin = active ? binAt(up.clientX, up.clientY) : null
       stop()
       if (bin) latestOnDrop.current(bin)
+      else if (active) latestOnCancel.current()
+    }
+
+    function cancel() {
+      stop()
+      latestOnCancel.current()
     }
 
     function onKey(key: KeyboardEvent) {
-      if (key.key === 'Escape') stop()
+      if (key.key === 'Escape') cancel()
     }
 
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
-    window.addEventListener('pointercancel', stop)
+    window.addEventListener('pointercancel', cancel)
     window.addEventListener('keydown', onKey)
     stopRef.current = stop
   }, [])
