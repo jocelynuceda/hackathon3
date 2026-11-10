@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { StatusScreen } from '../components/StatusScreen'
+import { AuthPage } from '../pages/AuthPage'
 import { EstadoPage } from '../pages/EstadoPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { RequireAuth } from './RequireAuth'
@@ -13,7 +14,8 @@ function Pending({ name }: { name: string }) {
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="login" element={<Pending name="Login" />} />
+      <Route path="login" element={<AuthPage key="login" register={false} />} />
+      <Route path="registro" element={<AuthPage key="register" register />} />
       <Route path="estado" element={<EstadoPage />} />
 
       <Route element={<RequireAuth />}>

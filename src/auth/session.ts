@@ -7,7 +7,7 @@ import type { Me, Permission } from './types'
  */
 export type Session =
   | { status: 'restoring'; me: null }
-  | { status: 'anonymous'; me: null }
+  | { status: 'anonymous'; me: null; message?: string }
   | { status: 'authenticated'; me: Me }
 
 export const SessionContext = createContext<Session>({ status: 'anonymous', me: null })
