@@ -1,3 +1,7 @@
+/**
+ * /files/:id/refine: archivo, reglas, TileLoader y eventos en vivo.
+ * La grilla virtualizada, la selección de grupos, las cajas y el piso compartido están en <RefineWorkspace />.
+ */
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { errorMessage } from '../api/errors'

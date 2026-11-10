@@ -19,7 +19,7 @@ interface RefineWorkspaceProps {
 
 function FileCompleted({ file }: { file: DataFile }) {
   return (
-    <section className="mt-6 rounded border border-teal-300 bg-slate-900 p-6">
+    <section className="mt-6 rounded border border-teal-300 bg-slate-900 p-6" role="status">
       <h2 className="text-xl font-semibold">Archivo completado</h2>
       <p className="mt-2 text-slate-300">
         Refinaste {file.refinedGroups} de {file.totalGroups} grupos, con {file.mistakes} errores anotados.
@@ -169,11 +169,11 @@ export function RefineWorkspace({ file, rules, loader, setFile }: RefineWorkspac
 
       <p className="text-sm text-slate-300">
         {canRefine
-          ? 'Con el teclado: selecciona el grupo, pasa con Tab a una caja y pulsa Enter. Escape cancela el arrastre.'
+          ? 'Teclado: flechas, Re Pág/Av Pág e Inicio/Fin para moverte. Enter selecciona el grupo. Usa Tab y Enter para enviarlo a una caja, o arrástralo. Escape cancela la selección.'
           : 'Tu cuenta puede ver este archivo, pero no refinarlo.'}
       </p>
 
-      <div role="status" className={`min-h-6 ${notice?.tone === 'error' ? 'text-rose-300' : 'text-teal-200'}`}>
+      <div role="status" aria-live="polite" className={`min-h-6 ${notice?.tone === 'error' ? 'text-rose-300' : 'text-teal-200'}`}>
         {notice?.text}
       </div>
       {floorNotice && <p role="status" className="text-sm text-amber-200">{floorNotice}</p>}
