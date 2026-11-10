@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
+import { useSession } from '../auth/session'
 import { Layout } from '../components/Layout'
 import { StatusScreen } from '../components/StatusScreen'
 import { LoginPage } from '../pages/LoginPage'
@@ -18,17 +19,24 @@ const BadgePage = lazy(() => import('../refiners/BadgePage').then((m) => ({ defa
 const IncidentsPage = lazy(() => import('../incidents/IncidentsPage').then((m) => ({ default: m.IncidentsPage })))
 const NewIncidentPage = lazy(() => import('../incidents/NewIncidentPage').then((m) => ({ default: m.NewIncidentPage })))
 
+function EstadoLayout() {
+  return useSession().status === 'authenticated' ? <Layout /> : <Outlet />
+}
+
 export function AppRoutes() {
   return (
     <Suspense fallback={<StatusScreen live title="Cargando…" />}>
       <Routes>
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
+        <Route path="registro" element={<RegisterPage />} />
+        <Route element={<EstadoLayout />}>
+          <Route path="estado" element={<EstadoPage />} />
+        </Route>
 
         <Route element={<RequireAuth />}>
           <Route element={<Layout />}>
             <Route index element={<Navigate to="/files" replace />} />
-            <Route path="estado" element={<EstadoPage />} />
 
             <Route element={<RequirePermission permissions={['files:read']} />}>
               <Route path="files" element={<FilesPage />} />

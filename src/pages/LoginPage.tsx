@@ -5,6 +5,7 @@ import type { SessionEndReason } from '../api/session'
 import { useAuth } from '../auth/AuthContext'
 import { useReturnTo } from '../auth/returnTo'
 import { Field } from '../components/Field'
+import { StatusScreen } from '../components/StatusScreen'
 
 const END_MESSAGES: Record<SessionEndReason, string | null> = {
   LOGOUT: null,
@@ -25,6 +26,7 @@ export function LoginPage() {
   const [formError, setFormError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
+  if (status === 'checking') return <StatusScreen live title="Verificando sesión…" />
   if (status === 'authenticated') return <Navigate to={next} replace />
 
   async function onSubmit(e: FormEvent) {

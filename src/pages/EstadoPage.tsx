@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { api } from '../api/client'
-import { errorMessage } from '../api/errors'
+import { ApiError, errorMessage } from '../api/errors'
 import type { Check, ClearanceResult, IntegrationStatus } from '../api/types'
 import { useAuth } from '../auth/AuthContext'
+import type { LoginRedirectState } from '../auth/returnTo'
 import { config } from '../config'
 import { StreamIndicator } from '../events/StreamIndicator'
+import { EstadoRoster } from './EstadoDetails'
 
 function Checks({ checks }: { checks: Check[] }) {
   return (
@@ -23,7 +26,32 @@ function Checks({ checks }: { checks: Check[] }) {
 }
 
 export function EstadoPage() {
-  const { me, reloadMe } = useAuth()
+  const { status } = useAuth()
+  const location = useLocation()
+  const returnState: LoginRedirectState = { from: location.pathname + location.search + location.hash }
+
+  if (status === 'authenticated') return <AuthenticatedEstado />
+
+  return (
+    <main className="mx-auto max-w-2xl p-8">
+      <h1 className="text-2xl font-semibold">Estado</h1>
+      <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
+        <dt className="text-slate-400">Build</dt>
+        <dd className="font-mono">{config.build}</dd>
+        <dt className="text-slate-400">API</dt>
+        <dd className="font-mono break-all">{config.apiBaseUrl}</dd>
+      </dl>
+      <div className="mt-6">
+        {status === 'checking' ? <p role="status">Verificando sesión…</p> : (
+          <Link className="b-link" to="/login" state={returnState}>Iniciar sesión para gestionar la cuadrilla</Link>
+        )}
+      </div>
+    </main>
+  )
+}
+
+function AuthenticatedEstado() {
+  const { me, reloadMe, can } = useAuth()
   const [health, setHealth] = useState<'ok' | 'down' | 'checking'>('checking')
   const [integrations, setIntegrations] = useState<IntegrationStatus | null>(null)
   const [clearance, setClearance] = useState<ClearanceResult | null>(null)
@@ -61,7 +89,9 @@ export function EstadoPage() {
       setClearance((prev) => ({ ...prev, ...res }))
       if (res.granted) await reloadMe()
     } catch (err) {
-      setCheckError(errorMessage(err))
+      setCheckError(err instanceof ApiError && err.code === 'CHECK_FROM_APP_REQUIRED'
+        ? 'Ejecuta esta revisión desde la aplicación desplegada en el dominio verificado.'
+        : errorMessage(err))
     } finally {
       setChecking(false)
     }
@@ -137,6 +167,8 @@ export function EstadoPage() {
           <p role="alert" className="mt-2 text-sm text-rose-300">{checkError}</p>
         )}
       </section>
+
+      {can('team:manage') && <EstadoRoster key={me?.team.code} />}
 
       <section className="mt-4 rounded border border-slate-700 p-4" aria-labelledby="estado-chaos">
         <h2 id="estado-chaos" className="font-semibold">Modo caos (para probar)</h2>
