@@ -1,5 +1,5 @@
 import { BrowserRouter } from 'react-router-dom'
-import { SessionProvider } from './auth/SessionProvider'
+import { AuthProvider } from './auth/AuthContext'
 import { HealthGate } from './health/HealthGate'
 import { AppRoutes } from './routes/AppRoutes'
 import './persona-b.css'
@@ -8,9 +8,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <HealthGate>
-        <SessionProvider>
+        <AuthProvider>
           <AppRoutes />
-        </SessionProvider>
+        </AuthProvider>
       </HealthGate>
     </BrowserRouter>
   )
