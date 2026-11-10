@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { PERMISSIONS } from '../api/types'
 import { useAuth } from '../auth/AuthContext'
 import { startEventStream, stopEventStream } from '../events/eventStream'
+import { ContingencyModal } from '../events/ContingencyModal'
 import { StreamIndicator } from '../events/StreamIndicator'
 import { ErrorBoundary } from './ErrorBoundary'
 
@@ -59,6 +60,7 @@ export function Layout() {
           <Outlet />
         </ErrorBoundary>
       </div>
+      <ContingencyModal />
     </div>
   )
 }

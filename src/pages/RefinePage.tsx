@@ -1,8 +1,6 @@
 /**
- * /files/:id/refine — PROVISIONAL.
- * Ya conecta el archivo, las reglas, el TileLoader y los eventos. La grilla virtualizada
- * (celdas, selección de grupos, arrastre a las cajas y refinamiento) va en <RefineGrid />,
- * que construye otra persona del equipo usando `loader` (ver src/grid/tileLoader.ts).
+ * /files/:id/refine: archivo, reglas, TileLoader y eventos en vivo.
+ * La grilla virtualizada, la selección de grupos, las cajas y el piso compartido están en <RefineWorkspace />.
  */
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'

@@ -7,3 +7,33 @@
 body {
   @apply bg-slate-950 text-slate-100 antialiased;
 }
+
+/* Celdas que dan miedo: tiemblan más rápido y más fuerte cuanto mayor es su tremor (--tremor 0..1). */
+@keyframes tremble {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(calc(var(--tremor) * 1.6px), calc(var(--tremor) * -1.2px)); }
+  50% { transform: translate(calc(var(--tremor) * -1.4px), calc(var(--tremor) * 1.4px)); }
+  75% { transform: translate(calc(var(--tremor) * 1.2px), calc(var(--tremor) * 1.6px)); }
+}
+
+.cell-scary {
+  color: #fecaca;
+  font-weight: 700;
+  animation: tremble calc(0.9s - var(--tremor) * 0.6s) linear infinite;
+}
+
+/* Con reduced motion no hay movimiento: se distinguen por fondo, subrayado y peso. */
+@media (prefers-reduced-motion: reduce) {
+  .cell-scary {
+    animation: none;
+    background: rgb(244 63 94 / calc(var(--tremor) * 0.45));
+    text-decoration: underline;
+  }
+}
+
+/* Grupo reservado por otro refinador: rayado. */
+.cell-claimed {
+  background-image: repeating-linear-gradient(45deg, rgb(217 70 239 / 0.35) 0 4px, transparent 4px 8px);
+  outline: 1px dashed rgb(232 121 249);
+  outline-offset: -2px;
+}
