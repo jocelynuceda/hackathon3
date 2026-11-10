@@ -2,6 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties, KeyboardEvent, PointerEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import type { DataFile } from '../api/types'
+import { FloorCursors, FloorMembers } from '../floor/FloorPresence'
+import type { FloorConnection } from '../floor/floorConnection'
 import type { Cell } from '../refine/types'
 import type { TileLoader } from './tileLoader'
 import './refine-grid.css'
@@ -22,6 +24,9 @@ interface RefineGridProps {
   loader: TileLoader
   threshold: number
   selected: ReadonlySet<string>
+  reservedBy: ReadonlyMap<string, string>
+  floor: FloorConnection
+  userId?: number
   onSelect: (cell: Cell) => void
   onDragStart?: (event: PointerEvent<HTMLElement>) => void
 }
@@ -53,7 +58,7 @@ function includeFocused(first: number, end: number, focused: number) {
   return visible
 }
 
-export function RefineGrid({ file, loader, threshold, selected, onSelect, onDragStart }: RefineGridProps) {
+export function RefineGrid({ file, loader, threshold, selected, reservedBy, floor, userId, onSelect, onDragStart }: RefineGridProps) {
   const scroller = useRef<HTMLDivElement>(null)
   const pendingFocus = useRef(false)
   const positionWritten = useRef<string | null>(null)
@@ -74,6 +79,7 @@ export function RefineGrid({ file, loader, threshold, selected, onSelect, onDrag
   const firstTileCol = Math.floor(firstCol / tileSize)
   const lastTileCol = Math.floor((endCol - 1) / tileSize)
   const hasViewport = view.width > 0 && view.height > 0
+  const area = { firstRow, endRow, firstCol, endCol }
 
   function measure() {
     const el = scroller.current
@@ -176,15 +182,25 @@ export function RefineGrid({ file, loader, threshold, selected, onSelect, onDrag
     measure()
   }
 
+  function jumpTo(cell: Cell) {
+    const el = scroller.current
+    if (!el) return
+    const target = { r: coordinate(cell.r, rows), c: coordinate(cell.c, cols) }
+    el.scrollTo(target.c * CELL, target.r * CELL)
+    setFocused(target)
+    onScroll()
+  }
+
   return (
-    <div
+    <>
+      <div
       ref={scroller}
       role="grid"
       aria-label="Grilla de refinamiento"
       aria-rowcount={rows}
       aria-colcount={cols}
       onScroll={onScroll}
-      className="h-[min(56vh,36rem)] max-w-[90rem] overflow-auto rounded border border-slate-700 bg-slate-950"
+      className="h-[min(56vh,576px)] max-w-[1440px] overflow-auto rounded border border-slate-700 bg-slate-950"
     >
       <div role="presentation" className="relative" style={{ width: cols * CELL, height: rows * CELL }}>
         {hasViewport && includeFocused(firstRow, endRow, focused.r).map((r) => (
@@ -196,8 +212,14 @@ export function RefineGrid({ file, loader, threshold, selected, onSelect, onDrag
                 const index = tile ? (r - tile.originRow) * tile.cols + c - tile.originCol : 0
                 const tremor = tile?.tremor[index]
                 const scary = tremor !== undefined && tremor >= threshold
-                const bin = tile ? binNames[tile.bins[index]] : undefined
-                const active = selected.has(cellKey({ r, c }))
+                const binChar = tile?.bins[index] ?? '.'
+                const bin = binNames[binChar]
+                const key = cellKey({ r, c })
+                const active = selected.has(key)
+                const holder = reservedBy.get(key)
+                const color = holder ? 'bg-indigo-950 text-indigo-100 ring-1 ring-inset ring-indigo-400'
+                  : active ? 'bg-teal-300 text-slate-950'
+                  : bin ? binColors[binChar] : scary ? 'bg-rose-950 text-rose-200' : tile ? 'text-slate-300' : 'bg-slate-900'
                 const label = tile
                   ? `${tile.values[index]}${scary ? ', da miedo' : ''}${bin ? `, caja ${bin}` : ''}`
                   : 'cargando'
@@ -209,14 +231,16 @@ export function RefineGrid({ file, loader, threshold, selected, onSelect, onDrag
                     aria-rowindex={r + 1}
                     aria-colindex={c + 1}
                     aria-selected={active}
-                    aria-label={label}
-                    data-cell={cellKey({ r, c })}
+                    aria-label={holder ? `${label}, reservado por ${holder}` : label}
+                    title={holder ? `Reservado por ${holder}` : undefined}
+                    data-cell={key}
                     tabIndex={r === focused.r && c === focused.c ? 0 : -1}
                     onFocus={() => setFocused({ r, c })}
                     onKeyDown={(event) => moveFocus(event, r, c)}
                     onClick={scary ? () => onSelect({ r, c }) : undefined}
-                    onPointerDown={active ? onDragStart : undefined}
-                    className={`absolute border-r border-b border-slate-800 font-mono focus-visible:z-10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white ${active ? 'bg-teal-300 text-slate-950' : bin ? binColors[tile!.bins[index]] : scary ? 'bg-rose-950 text-rose-200' : tile ? 'text-slate-300' : 'bg-slate-900'} ${active && onDragStart ? 'touch-none cursor-grab' : ''}`}
+                    onPointerOver={() => floor.cursor({ r, c })}
+                    onPointerDown={active && !holder ? onDragStart : undefined}
+                    className={`absolute top-0 border-r border-b border-slate-800 font-mono focus-visible:z-10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white ${color} ${active && !holder && onDragStart ? 'touch-none cursor-grab' : ''}`}
                     style={{ left: c * CELL, width: CELL, height: CELL }}
                   >
                     <span
@@ -229,7 +253,10 @@ export function RefineGrid({ file, loader, threshold, selected, onSelect, onDrag
               })}
           </div>
         ))}
+        <FloorCursors floor={floor} self={userId} area={area} cellSize={CELL} />
       </div>
-    </div>
+      </div>
+      <FloorMembers floor={floor} self={userId} area={area} onJump={jumpTo} />
+    </>
   )
 }

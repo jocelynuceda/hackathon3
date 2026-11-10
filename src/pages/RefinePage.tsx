@@ -12,11 +12,17 @@ export default function RefinePage() {
   const { file, rules, loader, error, loading, tileRows, tileCols, setFile, reload } = useFile(fileId)
   const [loadedTiles, setLoadedTiles] = useState(0)
 
-  // Cuenta los bloques recibidos al recorrer el archivo.
+  // Cuenta bloques distintos, sin sumar cambios de caja en la caché.
   useEffect(() => {
     if (!loader) return
+    const received = new Set<string>()
     setLoadedTiles(0)
-    return loader.subscribe(() => setLoadedTiles((n) => n + 1))
+    return loader.subscribe(({ tileRow, tileCol }) => {
+      const key = `${tileRow}:${tileCol}`
+      if (received.has(key)) return
+      received.add(key)
+      setLoadedTiles(received.size)
+    })
   }, [loader])
 
   // Otros refinadores: marca las celdas y actualiza las barras sin recargar.
@@ -37,7 +43,9 @@ export default function RefinePage() {
       </main>
     )
   }
-  if (loading && !file) return <main className="p-6" role="status">Cargando archivo…</main>
+  if (error === null && ((loading && !file) || (file && file.id !== fileId) || (loader && loader.fileId !== fileId))) {
+    return <main className="p-6" role="status">Cargando archivo…</main>
+  }
   if (error !== null || !file || !rules || !loader) {
     return (
       <main className="p-6" role="alert">

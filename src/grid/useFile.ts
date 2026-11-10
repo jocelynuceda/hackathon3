@@ -42,6 +42,7 @@ export function useFile(fileId: number): FileData {
       withRetry(() => api<Rules>(`/files/${fileId}/rules`, { signal: controller.signal }), controller.signal),
     ])
       .then(([f, r]) => {
+        if (controller.signal.aborted) return
         setFile(f)
         setRules(r)
       })
